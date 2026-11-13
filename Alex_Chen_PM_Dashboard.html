@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alex Chen — PM Workflow Dashboard</title>
+<style>
+  /* SAP Brand Tokens */
+  :root {
+    --sap-gold:       #F0AB00;
+    --sap-dark:       #1D2D3E;
+    --sap-blue:       #0070F2;
+    --sap-blue-light: #EBF4FF;
+    --sap-white:      #FFFFFF;
+    --sap-grey-10:    #F5F6F7;
+    --sap-grey-20:    #EDEFF0;
+    --sap-grey-50:    #89919A;
+    --sap-grey-70:    #556B82;
+    --sap-red:        #BB0000;
+    --sap-red-light:  #FFEBEB;
+    --sap-green:      #107E3E;
+    --sap-green-light:#F1FBF1;
+    --sap-orange:     #E76500;
+    --sap-orange-light:#FFF3E5;
+    --font: '72', 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--sap-grey-10);
+    color: var(--sap-dark);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--sap-dark);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .header-left { display: flex; align-items: center; gap: 20px; }
+  .sap-logo {
+    background: var(--sap-gold);
+    color: var(--sap-dark);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 1px;
+    padding: 6px 12px;
+    border-radius: 3px;
+  }
+  .header-title { color: var(--sap-white); font-size: 16px; font-weight: 400; opacity: 0.9; }
+  .header-badge {
+    background: var(--sap-red);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+  .header-right { color: var(--sap-grey-50); font-size: 12px; }
+
+  /* ── MAIN LAYOUT ── */
+  .page { max-width: 1280px; margin: 0 auto; padding: 32px 32px 64px; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--sap-grey-70);
+    margin-bottom: 12px;
+    margin-top: 32px;
+  }
+
+  /* ── KPI ROW ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .kpi-card {
+    background: var(--sap-white);
+    border-radius: 8px;
+    padding: 24px 20px;
+    border-top: 4px solid var(--sap-grey-20);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .kpi-card.red   { border-color: var(--sap-red); }
+  .kpi-card.gold  { border-color: var(--sap-gold); }
+  .kpi-card.green { border-color: var(--sap-green); }
+  .kpi-card.blue  { border-color: var(--sap-blue); }
+
+  .kpi-value {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .kpi-card.red   .kpi-value { color: var(--sap-red); }
+  .kpi-card.gold  .kpi-value { color: var(--sap-orange); }
+  .kpi-card.green .kpi-value { color: var(--sap-green); }
+  .kpi-card.blue  .kpi-value { color: var(--sap-blue); }
+
+  .kpi-label { font-size: 13px; color: var(--sap-grey-70); font-weight: 500; margin-bottom: 4px; }
+  .kpi-sub   { font-size: 11px; color: var(--sap-grey-50); }
+
+  /* ── TWO-COLUMN GRID ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--sap-white);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--sap-grey-20);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--sap-dark); }
+  .card-body  { padding: 20px; }
+
+  /* ── TIME SPLIT CHART ── */
+  .time-split-wrapper { display: flex; gap: 32px; align-items: flex-start; }
+  .time-split-bars { flex: 1; }
+  .bar-row { margin-bottom: 14px; }
+  .bar-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+  .bar-label { font-weight: 500; color: var(--sap-dark); }
+  .bar-pct   { font-weight: 600; }
+  .bar-track {
+    height: 14px;
+    background: var(--sap-grey-20);
+    border-radius: 7px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 7px;
+    transition: width 0.4s ease;
+    position: relative;
+  }
+  /* Before bars */
+  .before .bar-fill.strategic   { background: var(--sap-blue);   }
+  .before .bar-fill.admin       { background: var(--sap-red);    }
+  .before .bar-fill.meetings    { background: var(--sap-grey-50); }
+  .before .bar-fill.coordination{ background: var(--sap-orange); }
+  /* After bars */
+  .after .bar-fill.strategic    { background: var(--sap-green);  }
+  .after .bar-fill.admin        { background: #FFB800;            }
+  .after .bar-fill.meetings     { background: var(--sap-grey-50); }
+  .after .bar-fill.coordination { background: #B0C4DE;            }
+
+  .split-col-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--sap-grey-70);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--sap-grey-20);
+  }
+  .before .split-col-label { color: var(--sap-red); border-color: var(--sap-red); }
+  .after  .split-col-label { color: var(--sap-green); border-color: var(--sap-green); }
+
+  .arrow-col {
+    display: flex;
+    align-items: center;
+    padding-top: 32px;
+    font-size: 28px;
+    color: var(--sap-grey-50);
+  }
+
+  /* ── ACTIONS TABLE ── */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--sap-grey-10);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--sap-grey-70);
+    border-bottom: 1px solid var(--sap-grey-20);
+  }
+  td {
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--sap-grey-20);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--sap-blue-light); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-red    { background: var(--sap-red-light);    color: var(--sap-red); }
+  .badge-gold   { background: var(--sap-orange-light); color: var(--sap-orange); }
+  .badge-green  { background: var(--sap-green-light);  color: var(--sap-green); }
+  .badge-blue   { background: var(--sap-blue-light);   color: var(--sap-blue); }
+  .badge-grey   { background: var(--sap-grey-20);      color: var(--sap-grey-70); }
+
+  .owner-chip {
+    display: inline-block;
+    background: var(--sap-dark);
+    color: var(--sap-white);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+  }
+  .owner-chip.delegated {
+    background: var(--sap-blue);
+  }
+
+  /* ── RISK CARDS ── */
+  .risk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .risk-card {
+    border-radius: 8px;
+    padding: 18px;
+    border-left: 5px solid;
+    background: var(--sap-white);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .risk-card.high   { border-color: var(--sap-red);    background: var(--sap-red-light); }
+  .risk-card.medium { border-color: var(--sap-orange); background: var(--sap-orange-light); }
+
+  .risk-number { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: 0.6; margin-bottom: 4px; }
+  .risk-title  { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .risk-desc   { font-size: 12px; line-height: 1.5; color: var(--sap-grey-70); margin-bottom: 10px; }
+  .risk-footer { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* ── WHAT CHANGED ── */
+  .change-list { list-style: none; }
+  .change-list li {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--sap-grey-20);
+    align-items: flex-start;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .change-list li:last-child { border-bottom: none; }
+  .change-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .change-icon.fix  { background: var(--sap-green-light); }
+  .change-icon.warn { background: var(--sap-orange-light); }
+  .change-text strong { color: var(--sap-dark); }
+
+  /* ── FOOTER ── */
+  .footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--sap-grey-20);
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--sap-grey-50);
+  }
+
+  @media (max-width: 900px) {
+    .kpi-row    { grid-template-columns: repeat(2,1fr); }
+    .two-col    { grid-template-columns: 1fr; }
+    .risk-grid  { grid-template-columns: 1fr; }
+    .time-split-wrapper { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="sap-logo">SAP</div>
+    <span class="header-title">Sales Process Optimization &nbsp;|&nbsp; PM Workflow Dashboard &nbsp;|&nbsp; Alex Chen</span>
+  </div>
+  <div style="display:flex;gap:16px;align-items:center;">
+    <span class="header-badge">⚠ AT RISK — Week 6 of 12</span>
+    <span class="header-right">Last updated: June 13, 2026</span>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- KPIs -->
+  <div class="section-label">Project Health KPIs</div>
+  <div class="kpi-row">
+
+    <div class="kpi-card red">
+      <div class="kpi-label">Overall Project Status</div>
+      <div class="kpi-value">⚠ Risk</div>
+      <div class="kpi-sub">Phase 2 delayed · Phase 3 start Jul 7 at risk</div>
+    </div>
+
+    <div class="kpi-card gold">
+      <div class="kpi-label">Strategic Work (Before → After)</div>
+      <div class="kpi-value">32% → 53%</div>
+      <div class="kpi-sub">Target after delegation changes applied</div>
+    </div>
+
+    <div class="kpi-card red">
+      <div class="kpi-label">Tasks Owned by Alex</div>
+      <div class="kpi-value">14 → 8</div>
+      <div class="kpi-sub">of 18 total tasks &nbsp;|&nbsp; 6 redistributed</div>
+    </div>
+
+    <div class="kpi-card blue">
+      <div class="kpi-label">Open Critical Risks</div>
+      <div class="kpi-value">6 🔴</div>
+      <div class="kpi-sub">+ 2 monitoring &nbsp;|&nbsp; 7 of 8 owned by Alex</div>
+    </div>
+
+  </div>
+
+  <!-- TIME SPLIT -->
+  <div class="section-label" style="margin-top:32px;">Before / After Time Split</div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Weekly Time Allocation — Alex Chen (45 hrs/week)</span>
+      <span style="font-size:12px;color:var(--sap-grey-50);">Based on Week 6 actuals · After = projected post-delegation</span>
+    </div>
+    <div class="card-body">
+      <div class="time-split-wrapper">
+
+        <!-- BEFORE -->
+        <div class="time-split-bars before" style="flex:1;">
+          <div class="split-col-label">Before (Actual Week 6)</div>
+
+          <div class="bar-row">
+            <div class="bar-label-row">
+              <span class="bar-label">🟢 Strategic Work</span>
+              <span class="bar-pct" style="color:var(--sap-blue);">32% · 14.5 hrs</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill strategic" style="width:32%;"></div></div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label-row">
+              <span class="bar-label">🔴 Admin</span>
+              <span class="bar-pct" style="color:var(--sap-red);">40% · 18 hrs</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill admin" style="width:40%;"></div></div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label-row">
+              <span class="bar-label">🟡 Meetings</span>
+              <span class="bar-pct" style="color:var(--sap-grey-70);">18% · 8 hrs</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill meetings" style="width:18%;"></div></div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label-row">
+              <span class="bar-label">🟠 Coordination</span>
+              <span class="bar-pct" style="color:var(--sap-orange);">10% · 4.5 hrs</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill coordination" style="width:10%;"></div></div>
+          </div>
+        </div>
+
+        <div class="arrow-col">→</div>
+
+        <!-- AFTER -->
+        <div class="time-split-bars after" style="flex:1;">
+          <div class="split-col-label">After (Projected)</div>
+
+          <div class="bar-row">
+            <div class="bar-label-row">
+              <span class="bar-label">🟢 Strategic Work</span>
+              <span class="bar-pct" style="color:var(--sap-green);">53% · ~24 hrs</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill strategic" style="width:53%;"></div></div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label-row">
+              <span class="bar-label">🔴 Admin</span>
+              <span class="bar-pct" style="color:#B85C00;">20% · ~9 hrs</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill admin" style="width:20%;"></div></div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label-row">
+              <span class="bar-label">🟡 Meetings</span>
+              <span class="bar-pct" style="color:var(--sap-grey-70);">13% · ~6 hrs</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill meetings" style="width:13%;"></div></div>
+          </div>
+
+          <div class="bar-row">
+            <div class="bar-label-row">
+              <span class="bar-label">🟠 Coordination</span>
+              <span class="bar-pct" style="color:#556B82;">2% · ~1 hr</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill coordination" style="width:2%;"></div></div>
+          </div>
+
+          <div style="margin-top:16px;padding:10px 14px;background:var(--sap-green-light);border-radius:6px;font-size:12px;color:var(--sap-green);font-weight:600;">
+            ✓ +9 hrs/week recovered for strategic delivery
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP 5 ACTIONS -->
+  <div class="section-label">Top 5 Priority Actions</div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Critical Actions — Week of June 9–13, 2026</span>
+      <span style="font-size:12px;color:var(--sap-grey-50);">Delegated items shown in blue</span>
+    </div>
+    <div class="card-body" style="padding:0;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Action</th>
+            <th>Owner</th>
+            <th>Due</th>
+            <th>Priority</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="font-weight:700;color:var(--sap-dark);">1</td>
+            <td>
+              <strong>Deliver process design inputs to Marcus (CRM spec)</strong><br>
+              <span style="font-size:11px;color:var(--sap-grey-50);">Unblocks tech team · 2 weeks overdue</span>
+            </td>
+            <td><span class="owner-chip">Alex</span></td>
+            <td><strong style="color:var(--sap-red);">Jun 12</strong></td>
+            <td><span class="badge badge-red">🔴 Critical</span></td>
+            <td><span class="badge badge-gold">In Progress</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;color:var(--sap-dark);">2</td>
+            <td>
+              <strong>Scope brief to Priya — Change Management Plan</strong><br>
+              <span style="font-size:11px;color:var(--sap-grey-50);">2-hr session · 3 weeks behind · unlocks CM delivery</span>
+            </td>
+            <td><span class="owner-chip">Alex</span></td>
+            <td><strong style="color:var(--sap-red);">Jun 11</strong></td>
+            <td><span class="badge badge-red">🔴 Critical</span></td>
+            <td><span class="badge badge-red">Not Started</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;color:var(--sap-dark);">3</td>
+            <td>
+              <strong>APJ data chase + gap analysis completion</strong><br>
+              <span style="font-size:11px;color:var(--sap-grey-50);">Reassigned: Sarah leads · Alex accountable</span>
+            </td>
+            <td><span class="owner-chip delegated">Sarah</span></td>
+            <td><strong style="color:var(--sap-orange);">Jun 15</strong></td>
+            <td><span class="badge badge-red">🔴 Critical</span></td>
+            <td><span class="badge badge-gold">In Progress</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;color:var(--sap-dark);">4</td>
+            <td>
+              <strong>Transfer CRM vendor coordination to Marcus</strong><br>
+              <span style="font-size:11px;color:var(--sap-grey-50);">Recovers 3–4 hrs/week for Alex · one handoff call needed</span>
+            </td>
+            <td><span class="owner-chip delegated">Marcus</span></td>
+            <td><strong style="color:var(--sap-orange);">Jun 13</strong></td>
+            <td><span class="badge badge-gold">🟡 High</span></td>
+            <td><span class="badge badge-red">Not Started</span></td>
+          </tr>
+          <tr>
+            <td style="font-weight:700;color:var(--sap-dark);">5</td>
+            <td>
+              <strong>Consolidate regional stakeholder emails → one update</strong><br>
+              <span style="font-size:11px;color:var(--sap-grey-50);">James (EMEA) · Linda (Americas) write regional version</span>
+            </td>
+            <td><span class="owner-chip delegated">James / Linda</span></td>
+            <td><strong>Jun 16</strong></td>
+            <td><span class="badge badge-gold">🟡 High</span></td>
+            <td><span class="badge badge-red">Not Started</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TOP 3 RISKS + WHAT CHANGED -->
+  <div class="two-col" style="margin-top:0;">
+
+    <!-- RISKS -->
+    <div>
+      <div class="section-label">Top 3 Open Risks</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <div class="risk-card high">
+          <div class="risk-number">Risk #5 — Critical</div>
+          <div class="risk-title">Single Point of Failure — PM</div>
+          <div class="risk-desc">14 of 18 tasks owned by Alex. All 8 meeting action items assigned to Alex. No delegation or backup in place. If Alex is unavailable, the project stops.</div>
+          <div class="risk-footer">
+            <span class="badge badge-red">🔴 Open</span>
+            <span class="badge badge-red">High Probability</span>
+            <span class="badge badge-red">High Impact</span>
+            <span class="owner-chip">Alex</span>
+          </div>
+        </div>
+
+        <div class="risk-card high">
+          <div class="risk-number">Risk #1 — Critical Path</div>
+          <div class="risk-title">Phase 3 Pilot Delayed</div>
+          <div class="risk-desc">Process design 1 week behind across all 3 regions. If not complete by Jun 20, the pilot cannot start Jul 7 as planned. Change management plan not started.</div>
+          <div class="risk-footer">
+            <span class="badge badge-red">🔴 Open</span>
+            <span class="badge badge-red">High Probability</span>
+            <span class="badge badge-red">High Impact</span>
+            <span class="owner-chip">Alex</span>
+          </div>
+        </div>
+
+        <div class="risk-card medium">
+          <div class="risk-number">Risk #8 — Team Health</div>
+          <div class="risk-title">Team Underutilisation</div>
+          <div class="risk-desc">Sarah (50% available) and Priya (40% available) have capacity but no formal remit. Team is idle while the PM is overloaded. Morale and delivery both at risk.</div>
+          <div class="risk-footer">
+            <span class="badge badge-red">🔴 Open</span>
+            <span class="badge badge-gold">High Probability</span>
+            <span class="badge badge-gold">Medium Impact</span>
+            <span class="owner-chip">Alex</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- WHAT CHANGED -->
+    <div>
+      <div class="section-label">What Changed & Why</div>
+      <div class="card" style="height:calc(100% - 28px);">
+        <div class="card-header">
+          <span class="card-title">Redesign Summary — 3 Structural Fixes</span>
+        </div>
+        <div class="card-body">
+          <ul class="change-list">
+            <li>
+              <div class="change-icon fix">📋</div>
+              <div class="change-text">
+                <strong>Reporting consolidated → saves ~5.5 hrs/week</strong><br>
+                Three separate regional emails replaced by one shared template. James (EMEA) and Linda (Americas) write regional versions. Executive report stays with Alex but drawn from a single source. Tracker migrated to one tool.
+              </div>
+            </li>
+            <li>
+              <div class="change-icon fix">👥</div>
+              <div class="change-text">
+                <strong>Delegation formalised → unblocks 3 critical paths</strong><br>
+                RACI updated: Alex moves from Responsible on 14/18 → 8/18 tasks. Sarah owns gap analysis. Priya owns change management plan. Marcus owns CRM spec + vendor. James and Linda own regional comms. Team moves from idle to active.
+              </div>
+            </li>
+            <li>
+              <div class="change-icon fix">🕗</div>
+              <div class="change-text">
+                <strong>Morning blocks protected for strategic work</strong><br>
+                Deep work (process design, gap analysis) locked 08:00–12:00. Admin batched into one early-afternoon slot. Context-switching eliminated. Projected result: +9 strategic hours per week.
+              </div>
+            </li>
+            <li>
+              <div class="change-icon warn">⚠</div>
+              <div class="change-text">
+                <strong>Dependency: Alex must act by Wed Jun 11</strong><br>
+                The scope brief to Priya and the CRM handoff to Marcus must happen this week. Without these two conversations, all downstream delegation breaks down regardless of the RACI change.
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span>Sales Process Optimization · Project Manager: Alex Chen · Dashboard generated: June 13, 2026</span>
+    <span>SAP Internal · Confidential</span>
+  </div>
+
+</div>
+</body>
+</html>
